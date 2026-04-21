@@ -123,6 +123,9 @@ func (p *Parser) ParseSchemasFromStructs() error {
 	if packages.PrintErrors(pkgs) > 0 {
 		return err
 	}
+	if p.T.Components == nil {
+		p.T.Components = &openapi3.Components{}
+	}
 	if p.T.Components.Schemas == nil {
 		p.T.Components.Schemas = openapi3.Schemas{}
 	}
