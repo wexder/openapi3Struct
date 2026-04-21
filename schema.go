@@ -381,6 +381,8 @@ func updateExample(fieldSchema *openapi3.SchemaRef, value string) {
 			// TODO handle error
 		}
 		fieldSchema.Value.Example = bool
+	} else {
+		fieldSchema.Value.Example = value
 	}
 }
 
