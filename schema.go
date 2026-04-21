@@ -74,6 +74,7 @@ func resolveSchema(schemas openapi3.Schemas, s ast.Spec, doc string, declaration
 
 						// Handle oapi tag
 						if strings.HasPrefix(match[1], "oapi") {
+							fmt.Printf("line: %v\n", match[0])
 							requiredAttr := updateSchemaAttribute(fieldSchema, match[0])
 							if requiredAttr {
 								required = true
@@ -279,10 +280,10 @@ func updateSchemaAttribute(fieldSchema *openapi3.SchemaRef, keyValue string) boo
 	attrName := attrs[1]
 	attrName = strings.ToUpper(string(attrs[1][0])) + string(attrName[1:])
 	if attrName == "Required" {
-		if match[2] == "true" {
-			return true
-		}
-
+		return match[2] == "true"
+	}
+	if attrName == "Example" {
+		updateExample(fieldSchema, match[2])
 		return false
 	}
 
@@ -336,6 +337,8 @@ func updateSchemaAttribute(fieldSchema *openapi3.SchemaRef, keyValue string) boo
 			newValue = append(newValue, strings.TrimSpace(v))
 		}
 		fv.Set(reflect.ValueOf(newValue))
+	case "interface {}":
+		fv.Set(reflect.ValueOf(match[2]))
 	default:
 		if pointer {
 			fv.Set(reflect.ValueOf(&match[2]))
@@ -348,6 +351,34 @@ func updateSchemaAttribute(fieldSchema *openapi3.SchemaRef, keyValue string) boo
 	fieldSchema.Value = &updatedSchema
 
 	return false
+}
+
+func updateExample(fieldSchema *openapi3.SchemaRef, value string) {
+	if fieldSchema.Value == nil {
+		return
+	}
+
+	if fieldSchema.Value.Type.Is("integer") {
+		int, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			// TODO handle error
+		}
+		fieldSchema.Value.Example = int
+	} else if fieldSchema.Value.Type.Is("number") {
+		float, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			// TODO handle error
+		}
+		fieldSchema.Value.Example = float
+	} else if fieldSchema.Value.Type.Is("string") {
+		fieldSchema.Value.Example = value
+	} else if fieldSchema.Value.Type.Is("boolean") {
+		bool, err := strconv.ParseBool(value)
+		if err != nil {
+			// TODO handle error
+		}
+		fieldSchema.Value.Example = bool
+	}
 }
 
 func resolveField(schemas openapi3.Schemas, f *ast.Field, typ ast.Expr, declarationMap map[string]*ast.TypeSpec) (*openapi3.SchemaRef, bool) {

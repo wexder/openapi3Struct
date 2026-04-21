@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"testing"
 
+	"github.com/code-growers/tst"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
@@ -44,11 +45,12 @@ func parseTypeSpec(t *testing.T, src string) (*ast.TypeSpec, map[string]*ast.Typ
 
 func TestResolveSchema_StructType(t *testing.T) {
 	t.Parallel()
+	tst := tst.New(t)
 
 	src := `package test
 type Foo struct {
-	Name string ` + "`json:\"name\"`" + `
-	Age  int    ` + "`json:\"age\"`" + `
+	Name string ` + "`json:\"name\" oapi_example:\"test\"`" + `
+	Age  int    ` + "`json:\"age\" oapi_example:\"31\"`" + `
 }
 `
 	ts, declMap := parseTypeSpec(t, src)
@@ -68,6 +70,10 @@ type Foo struct {
 	if _, ok := schema.Properties["age"]; !ok {
 		t.Error("expected property 'age'")
 	}
+
+	tst.Equal(schema.Properties["name"].Value.Example, "test")
+
+	tst.Equal(schema.Properties["age"].Value.Example, int64(31))
 }
 
 func TestResolveSchema_ArrayOfPrimitive(t *testing.T) {
