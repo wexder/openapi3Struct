@@ -1,4 +1,4 @@
-module github.com/nextap-solutions/openapi3Struct
+module github.com/wexder/openapi3Struct
 
 go 1.24.4
 

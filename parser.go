@@ -10,7 +10,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/itchyny/json2yaml"
-	"github.com/nextap-solutions/openapi3Struct/domain"
+	"github.com/wexder/openapi3Struct/domain"
 	"golang.org/x/tools/go/packages"
 )
 
