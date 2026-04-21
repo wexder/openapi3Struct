@@ -44,6 +44,10 @@ func WithPackagePaths(paths []string) Option {
 }
 
 func (p *Parser) AddPath(path Path) {
+	if p.T.Paths == nil {
+		p.T.Paths = &openapi3.Paths{}
+	}
+
 	// TODO improve this to add checks for all kinds of optional fields
 	storedPath := p.T.Paths.Value(path.Path)
 
