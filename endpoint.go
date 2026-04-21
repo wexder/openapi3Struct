@@ -1,4 +1,4 @@
-package domain
+package openapi3Struct
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ func GetTypeName(v any) string {
 		return ""
 	}
 	typ := reflect.TypeOf(v)
-	if typ.Kind() == reflect.Ptr {
+	if typ.Kind() == reflect.Pointer {
 		typ = typ.Elem()
 	}
 	return typ.Name()
@@ -74,7 +74,7 @@ func (ob *OperationBuilder) WithRequestBodyType(bodyType any, description string
 
 	if isSlice {
 		elemType := typ.Elem()
-		if elemType.Kind() == reflect.Ptr {
+		if elemType.Kind() == reflect.Pointer {
 			elemType = elemType.Elem()
 		}
 		itemTypeName = elemType.Name()
@@ -199,7 +199,7 @@ func (ob *OperationBuilder) Build() *openapi3.Operation {
 	return ob.op
 }
 
-type HandlerProvider interface{}
+type HandlerProvider any
 
 type EndpointDoc struct {
 	Path     string

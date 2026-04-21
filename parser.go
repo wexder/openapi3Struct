@@ -10,7 +10,6 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/itchyny/json2yaml"
-	"github.com/wexder/openapi3Struct/domain"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -22,7 +21,6 @@ const (
 type Parser struct {
 	T           openapi3.T
 	packagePath []string
-	paths       []domain.Path
 }
 
 type Option func(p Parser) Parser
@@ -45,7 +43,7 @@ func WithPackagePaths(paths []string) Option {
 	}
 }
 
-func (p *Parser) AddPath(epDoc domain.EndpointDoc) {
+func (p *Parser) AddPath(epDoc EndpointDoc) {
 	path := epDoc.BuildOpenAPiStruct()
 	if p.T.Paths == nil {
 		p.T.Paths = &openapi3.Paths{}
@@ -132,7 +130,7 @@ func (p *Parser) ParseSchemasFromStructs() error {
 	schemas := walkPackageAndResolveSchemas(pkgs)
 	for name, schema := range schemas {
 		if _, ok := p.T.Components.Schemas[name]; ok {
-			return fmt.Errorf("Generated schema conflict Name=%s", name)
+			return fmt.Errorf("generated schema conflict Name=%s", name)
 		}
 
 		p.T.Components.Schemas[name] = schema
@@ -184,7 +182,6 @@ func walkPackageAndResolveSchemas(pkgs []*packages.Package) openapi3.Schemas {
 							schemas[*name] = openapi3.NewSchemaRef("", &schema)
 						}
 					}
-					break
 				case *ast.BadDecl:
 					break
 				default:
