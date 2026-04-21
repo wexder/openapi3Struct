@@ -74,7 +74,6 @@ func resolveSchema(schemas openapi3.Schemas, s ast.Spec, doc string, declaration
 
 						// Handle oapi tag
 						if strings.HasPrefix(match[1], "oapi") {
-							fmt.Printf("line: %v\n", match[0])
 							requiredAttr := updateSchemaAttribute(fieldSchema, match[0])
 							if requiredAttr {
 								required = true
@@ -289,6 +288,10 @@ func updateSchemaAttribute(fieldSchema *openapi3.SchemaRef, keyValue string) boo
 
 	rfValue := reflect.ValueOf(fieldSchema.Value).Elem()
 	fv := rfValue.FieldByName(attrName)
+	// TODO handle error
+	if !fv.IsValid() {
+		return false
+	}
 	fvType := fv.Type().String()
 	pointer := false
 	if strings.HasPrefix(fvType, "*") {

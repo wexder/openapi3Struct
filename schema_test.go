@@ -714,3 +714,22 @@ type Outer struct {
 		}
 	}
 }
+
+func TestResolveSchema_InvalidSchemaTags(t *testing.T) {
+	t.Parallel()
+
+	src := `package test
+// oapi:schema
+type BonusActive struct {
+	Month string ` + "`json:\"month\" validate:\"required\" oapi_examples:\"2023-01\"`" + `
+}
+`
+	ts, declMap := parseTypeSpec(t, src)
+	schemas := openapi3.Schemas{}
+
+	name, _ := resolveSchema(schemas, ts, "", declMap)
+
+	if name == nil || *name != "BonusActive" {
+		t.Fatalf("expected name 'BonusActive', got %v", name)
+	}
+}
