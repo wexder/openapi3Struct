@@ -285,6 +285,10 @@ func updateSchemaAttribute(fieldSchema *openapi3.SchemaRef, keyValue string) boo
 		updateExample(fieldSchema, match[2])
 		return false
 	}
+	if attrName == "Type" {
+		fieldSchema.Value.Type = &openapi3.Types{match[2]}
+		return false
+	}
 
 	rfValue := reflect.ValueOf(fieldSchema.Value).Elem()
 	fv := rfValue.FieldByName(attrName)

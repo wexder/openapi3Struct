@@ -592,11 +592,12 @@ type Outer struct {
 // (direct SelectorExpr, non-pointer) resolves as an object without panicking.
 func TestResolveField_CrossPackageDirectField_ReturnsObject(t *testing.T) {
 	t.Parallel()
+	tst := tst.New(t)
 
 	src := `package test
 import "time"
 type Outer struct {
-	Timestamp time.Time ` + "`json:\"timestamp\"`" + `
+	Timestamp time.Time ` + "`json:\"timestamp\" oapi_type:\"string\"`" + `
 }
 `
 	fset := token.NewFileSet()
@@ -635,9 +636,8 @@ type Outer struct {
 	if !ok {
 		t.Fatal("expected property 'timestamp'")
 	}
-	if prop.Value == nil || (*prop.Value.Type)[0] != "object" {
-		t.Fatalf("expected timestamp type 'object', got %v", prop.Value.Type)
-	}
+
+	tst.Equal((*prop.Value.Type)[0], "string")
 }
 
 // TestResolveSchema_NestedStructAutoRegistered tests that when a struct field
@@ -732,4 +732,51 @@ type BonusActive struct {
 	if name == nil || *name != "BonusActive" {
 		t.Fatalf("expected name 'BonusActive', got %v", name)
 	}
+}
+
+func TestResolveSchema_CommentTypeOverride(t *testing.T) {
+	t.Parallel()
+	tst := tst.New(t)
+
+	src := `package test
+import "time"
+type Outer struct {
+	Timestamp YearMonth ` + "`json:\"timestamp\" oapi_type:\"string\"`" + `
+}
+
+type YearMonth time.Time
+`
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "test.go", src, parser.ParseComments)
+	if err != nil {
+		t.Fatalf("parse source: %v", err)
+	}
+
+	declMap := map[string]*ast.TypeSpec{}
+	schemas := openapi3.Schemas{}
+	for _, decl := range f.Decls {
+		gd, ok := decl.(*ast.GenDecl)
+		if !ok {
+			continue
+		}
+		for _, spec := range gd.Specs {
+			ts, ok := spec.(*ast.TypeSpec)
+			if !ok {
+				continue
+			}
+			declMap[ts.Name.Name] = ts
+			name, schema := resolveSchema(schemas, ts, "", declMap)
+			if name != nil {
+				schemas[*name] = openapi3.NewSchemaRef("", &schema)
+			}
+		}
+	}
+
+	schema := schemas["Outer"]
+	prop, ok := schema.Value.Properties["timestamp"]
+	if !ok {
+		t.Fatal("expected property 'timestamp'")
+	}
+
+	tst.Equal((*prop.Value.Type)[0], "string")
 }
