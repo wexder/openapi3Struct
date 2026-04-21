@@ -233,6 +233,11 @@ func resolveSchema(schemas openapi3.Schemas, s ast.Spec, doc string, declaration
 			return &s.Name.Name, schema
 		case *ast.MapType:
 			schema.Type = &openapi3.Types{"object"}
+			f, _ := resolveField(schemas, nil, st.Value, declarationMap)
+			schema.AdditionalProperties = openapi3.AdditionalProperties{
+				Has:    new(true),
+				Schema: f,
+			}
 			return &s.Name.Name, schema
 		case *ast.InterfaceType:
 			schema.Type = &openapi3.Types{"object"}
@@ -361,8 +366,13 @@ func resolveField(schemas openapi3.Schemas, f *ast.Field, typ ast.Expr, declarat
 	switch ft := typ.(type) {
 	case *ast.MapType:
 		// TODO is this default required correct ?
+		schema, _ := resolveField(schemas, f, ft.Value, declarationMap)
 		return openapi3.NewSchemaRef("", &openapi3.Schema{
 			Type: &openapi3.Types{"object"},
+			AdditionalProperties: openapi3.AdditionalProperties{
+				Has:    new(true),
+				Schema: schema,
+			},
 		}), false
 	// TODO improve, we cannot handle array of arrays now
 	case *ast.ArrayType:
@@ -411,7 +421,7 @@ func resolveField(schemas openapi3.Schemas, f *ast.Field, typ ast.Expr, declarat
 
 	if Type == "object" {
 		doc := ""
-		if f.Doc != nil {
+		if f != nil && f.Doc != nil {
 			doc = f.Doc.Text()
 		}
 		if ident.Obj != nil && ident.Obj.Decl != nil {

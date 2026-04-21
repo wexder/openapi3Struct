@@ -470,6 +470,59 @@ type MapList []map[string]string
 	}
 }
 
+func TestResolveSchema_MapOfTypes(t *testing.T) {
+	t.Parallel()
+
+	src := `package test
+type Item struct {
+	ID string ` + "`json:\"id\"`" + `
+}
+type ItemMap map[string]Item
+`
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "test.go", src, parser.ParseComments)
+	if err != nil {
+		t.Fatalf("parse source: %v", err)
+	}
+
+	declMap := map[string]*ast.TypeSpec{}
+	var target *ast.TypeSpec
+	for _, decl := range f.Decls {
+		gd, ok := decl.(*ast.GenDecl)
+		if !ok {
+			continue
+		}
+		for _, spec := range gd.Specs {
+			ts, ok := spec.(*ast.TypeSpec)
+			if !ok {
+				continue
+			}
+			declMap[ts.Name.Name] = ts
+			if ts.Name.Name == "ItemMap" {
+				target = ts
+			}
+		}
+	}
+	if target == nil {
+		t.Fatal("ItemPtrList type not found")
+	}
+
+	schemas := openapi3.Schemas{}
+	name, schema := resolveSchema(schemas, target, "", declMap)
+	if name == nil || *name != "ItemMap" {
+		t.Fatalf("expected name 'ItemMap', got %v", name)
+	}
+	if schema.Type == nil || (*schema.Type)[0] != "object" {
+		t.Fatalf("expected type '&[object]', got %v", schema.Type)
+	}
+	if schema.AdditionalProperties.Has != nil && !*schema.AdditionalProperties.Has {
+		t.Fatal("expected AdditionalProperties")
+	}
+	if schema.AdditionalProperties.Schema == nil {
+		t.Fatal("expected AdditionalProperties Schema")
+	}
+}
+
 // TestResolveField_CrossPackagePointerField tests that a field typed *pkg.Type
 // (StarExpr wrapping SelectorExpr) does not panic and resolves as an optional object.
 // Regression test for the StarExpr→SelectorExpr fall-through panic.

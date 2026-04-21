@@ -1,6 +1,6 @@
 module github.com/wexder/openapi3Struct
 
-go 1.24.4
+go 1.26.1
 
 require github.com/getkin/kin-openapi v0.132.0
 
