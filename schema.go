@@ -235,7 +235,7 @@ func resolveSchema(schemas openapi3.Schemas, s ast.Spec, doc string, declaration
 			schema.Type = &openapi3.Types{"object"}
 			f, _ := resolveField(schemas, nil, st.Value, declarationMap)
 			schema.AdditionalProperties = openapi3.AdditionalProperties{
-				Has:    new(true),
+				Has:    nil,
 				Schema: f,
 			}
 			return &s.Name.Name, schema
@@ -370,7 +370,7 @@ func resolveField(schemas openapi3.Schemas, f *ast.Field, typ ast.Expr, declarat
 		return openapi3.NewSchemaRef("", &openapi3.Schema{
 			Type: &openapi3.Types{"object"},
 			AdditionalProperties: openapi3.AdditionalProperties{
-				Has:    new(true),
+				Has:    nil,
 				Schema: schema,
 			},
 		}), false
