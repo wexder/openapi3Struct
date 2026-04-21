@@ -43,11 +43,7 @@ func WithPackagePaths(paths []string) Option {
 	}
 }
 
-func (p *Parser) AddPath(epDoc EndpointDoc) {
-	path := epDoc.BuildOpenAPiStruct()
-	if p.T.Paths == nil {
-		p.T.Paths = &openapi3.Paths{}
-	}
+func (p *Parser) AddPath(path Path) {
 	// TODO improve this to add checks for all kinds of optional fields
 	storedPath := p.T.Paths.Value(path.Path)
 
