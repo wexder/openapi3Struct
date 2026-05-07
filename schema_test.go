@@ -780,3 +780,49 @@ type YearMonth time.Time
 
 	tst.Equal((*prop.Value.Type)[0], "string")
 }
+
+func TestResolveSchema_RefOverride(t *testing.T) {
+	t.Parallel()
+	tst := tst.New(t)
+
+	src := `
+package test
+type Outer struct {
+	// oapi_ref:"#/components/schemas/YearMonth"
+	Timestamp YearMonth ` + "`json:\"timestamp\"`" + `
+}
+`
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "test.go", src, parser.ParseComments)
+	if err != nil {
+		t.Fatalf("parse source: %v", err)
+	}
+
+	declMap := map[string]*ast.TypeSpec{}
+	schemas := openapi3.Schemas{}
+	for _, decl := range f.Decls {
+		gd, ok := decl.(*ast.GenDecl)
+		if !ok {
+			continue
+		}
+		for _, spec := range gd.Specs {
+			ts, ok := spec.(*ast.TypeSpec)
+			if !ok {
+				continue
+			}
+			declMap[ts.Name.Name] = ts
+			name, schema := resolveSchema(schemas, ts, "", declMap)
+			if name != nil {
+				schemas[*name] = openapi3.NewSchemaRef("", &schema)
+			}
+		}
+	}
+
+	schema := schemas["Outer"]
+	prop, ok := schema.Value.Properties["timestamp"]
+	if !ok {
+		t.Fatal("expected property 'timestamp'")
+	}
+
+	tst.Equal(prop.RefString(), "#/components/schemas/YearMonth")
+}
