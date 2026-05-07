@@ -290,7 +290,6 @@ func updateSchemaAttribute(fieldSchema *openapi3.SchemaRef, keyValue string) boo
 		return false
 	}
 	if attrName == "Ref" {
-		fmt.Printf("%v %v\n", attrName, match)
 		fieldSchema.Value = nil
 		fieldSchema.Ref = match[2]
 		return false
