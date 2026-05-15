@@ -12,7 +12,7 @@ import (
 )
 
 // See https://regex101.com/r/8SGj7m/1
-var tagReqexp = regexp.MustCompile(`([^  \x60\n][a-zA-z0-9_-]+):"? ?([#/ a-zA-z0-9{},_-]+)"? ?`)
+var tagReqexp = regexp.MustCompile(`([^  \x60\n][a-zA-z0-9_-]+):"? ?([#/ a-zA-z0-9{},_:-]+)"? ?`)
 
 func resolveSchema(schemas openapi3.Schemas, s ast.Spec, doc string, declarationMap map[string]*ast.TypeSpec) (*string, openapi3.Schema) {
 	schema := openapi3.Schema{
